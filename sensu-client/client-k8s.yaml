@@ -1,0 +1,83 @@
+---
+apiVersion: v1
+data:
+  config.json: |
+    {
+      "redis": {
+        "host": "sensu-redis",
+        "port": 6379,
+        "password": "FL6vqYlbQu",
+        "db": 0,
+        "auto_reconnect": true,
+        "reconnect_on_error": true
+      },
+      "transport": {
+        "name": "redis"
+      },
+      "api": {
+        "host": "sensu-api",
+        "port": 4567
+      },
+      "client": {
+        "name": "k8s",
+        "deregister": true,
+        "deregistration": {
+          "handler": "deregistration"
+        },
+        "subscriptions": [
+          "k8s"
+        ]
+      }
+    }
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: sensu-config-2
+  namespace: sensu
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: sensu-client-2
+  labels:
+    name: sensu-client-2
+  namespace: sensu
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: sensu-client-2
+    spec:
+      imagePullSecrets:
+      - name: gcr-credential
+      volumes:
+        - name: sensu-config-2
+          configMap:
+            name: sensu-config-2
+        - name: sensu-checks-2
+          configMap:
+            name: sensu-checks-2
+      containers:
+      - name: sensu-client-2
+        args:
+          - client
+        env:
+          - name: NO_CONFIGURE_DEFAULTS
+            value: "true"
+          - name: SENSU_CLIENT_NAME
+            value: sensu-client-2
+        image: sensu:latest
+        imagePullPolicy: Always
+        volumeMounts:
+          - name: sensu-config-2
+            mountPath: /etc/sensu/conf.d/config.json
+            subPath: config.json
+        resources:
+          limits:
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+      nodeSelector:
+        beta.kubernetes.io/os: linux

@@ -1,0 +1,22 @@
+apiVersion: v1
+data:
+  slack_handler.json: |
+      {
+        "handlers": {
+          "slack": {
+            "type": "pipe",
+            "command": "handler-slack.rb",
+            "severites": ["critical", "unknown", "ok"],
+            "filters": [ "occurrences" ]
+            }
+          },
+          "slack": {
+            "webhook_url": {{ .Values.slack.webhookUrl | quote }},
+            "template" : {{ .Values.slack.template | quote }},
+            "channel": {{ .Values.slack.channel | quote }}
+          }
+      }
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: slack-handler-config

@@ -1,0 +1,28 @@
+apiVersion: v1
+data:
+  config.json: |
+      {
+        "sensu": [
+          {
+            "name": {{ .Values.uchiwa.datacenterName | quote }},
+            "host": "{{ template "sensu.api.fullname" .  }}",
+            "port": {{ .Values.api.port }}
+          }
+        ],
+        "uchiwa": {
+          "host": {{ .Values.uchiwa.host | quote }},
+          "port": {{ .Values.uchiwa.port }},
+          "refresh": {{ .Values.uchiwa.refresh }},
+          "loglevel": {{ .Values.uchiwa.loglevel | quote }},
+          "users": [
+            {
+            "username": {{ .Values.uchiwa.user | quote }},
+            "password": {{ .Values.uchiwa.pass | quote }}
+            }
+          ]
+        }
+      }
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: uchiwa-config

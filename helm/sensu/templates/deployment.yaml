@@ -1,0 +1,149 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "sensu.fullname" . }}
+  labels:
+    heritage: {{ .Release.Service | quote }}
+    release: {{ .Release.Name | quote }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "sensu.fullname" . }}
+        release: {{ .Release.Name | quote }}
+    spec:
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        - name: {{ .Values.imagePullSecrets.name }}
+      {{- end }}
+      volumes:
+        - name: uchiwa-config
+          configMap:
+            name: uchiwa-config
+        - name: sensu-checks
+          configMap:
+            name: sensu-checks
+        - name: slack-handler-config
+          configMap:
+            name: slack-handler-config
+        - name: default-handlers-config
+          configMap:
+            name: default-handlers-config
+      containers:
+      - name: server
+        image: "{{ .Values.server.image }}:{{ .Values.server.imageTag }}"
+        imagePullPolicy: {{ .Values.server.pullPolicy }}
+        volumeMounts:
+          - name: slack-handler-config
+            mountPath: /etc/sensu/conf.d/slack_handler.json
+            subPath: slack_handler.json
+          - name: default-handlers-config
+            mountPath: /etc/sensu/conf.d/default_handlers.json
+            subPath: default_handlers.json
+          - name: sensu-checks
+            mountPath: /etc/sensu/check.d/check-sensu-website.json
+            subPath: check-sensu-website.json
+        args:
+          - server
+        resources:
+{{ toYaml .Values.server.resources | indent 10 }}
+        env:
+        - name: API_HOST
+          value: {{ .Values.api.host }}
+        - name: API_PORT
+          value: {{ .Values.api.port | quote }}
+        - name: REDIS_HOST
+          value: {{ template "sensu.redis.fullname" . }}
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "sensu.redis.fullname" . }}
+              key: redis-password
+        - name: REDIS_DB
+          value: {{ .Values.REDIS_DB | quote }}
+        - name: REDIS_AUTO_RECONNECT
+          value: {{ .Values.REDIS_AUTO_RECONNECT | quote }}
+        - name: REDIS_RECONNECT_ON_ERROR
+          value: {{ .Values.REDIS_RECONNECT_ON_ERROR | quote }}
+        - name: REDIS_PORT
+          value: {{ .Values.REDIS_PORT | quote }}
+
+      - name: api
+        image: "{{ .Values.api.image }}:{{ .Values.api.imageTag }}"
+        imagePullPolicy: {{ .Values.api.pullPolicy }}
+        volumeMounts:
+          - name: slack-handler-config
+            mountPath: /etc/sensu/conf.d/slack_handler.json
+            subPath: slack_handler.json
+          - name: default-handlers-config
+            mountPath: /etc/sensu/conf.d/default_handlers.json
+            subPath: default_handlers.json
+          - name: sensu-checks
+            mountPath: /etc/sensu/check.d/check-sensu-website.json
+            subPath: check-sensu-website.json
+        args:
+          - api
+        resources:
+{{ toYaml .Values.api.resources | indent 10 }}
+        env:
+        - name: REDIS_HOST
+          value: {{ template "sensu.redis.fullname" . }}
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "sensu.redis.fullname" . }}
+              key: redis-password
+        - name: REDIS_DB
+          value: {{ .Values.REDIS_DB | quote }}
+        - name: REDIS_AUTO_RECONNECT
+          value: {{ .Values.REDIS_AUTO_RECONNECT | quote }}
+        - name: REDIS_RECONNECT_ON_ERROR
+          value: {{ .Values.REDIS_RECONNECT_ON_ERROR | quote }}
+        - name: REDIS_PORT
+          value: {{ .Values.REDIS_PORT | quote }}
+        ports:
+        - containerPort: {{ .Values.api.port }}
+        readinessProbe:
+          httpGet:
+            path: /info
+            port: {{ .Values.api.port }}
+          initialDelaySeconds: 30
+          timeoutSeconds: 3
+        livenessProbe:
+          httpGet:
+            path: /info
+            port: {{ .Values.api.port }}
+          initialDelaySeconds: 30
+          timeoutSeconds: 3
+
+      - args:
+        - -c
+        - /etc/uchiwa/config.json
+        - -d
+        - /etc/uchiwa/config.d
+        command: 
+        - /go/bin/uchiwa
+        name: uchiwa
+        image: "{{ .Values.uchiwa.image }}:{{ .Values.uchiwa.imageTag }}"
+        imagePullPolicy: {{ .Values.uchiwa.pullPolicy }}
+        resources:
+{{ toYaml .Values.uchiwa.resources | indent 10 }}
+        volumeMounts:
+          - name: uchiwa-config
+            mountPath: /etc/uchiwa
+        livenessProbe:
+          httpGet:
+            path: /
+            port: {{ .Values.uchiwa.port }}
+          initialDelaySeconds: 30
+          timeoutSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: {{ .Values.uchiwa.port }}
+          initialDelaySeconds: 30
+          timeoutSeconds: 3
+        ports:
+        - containerPort: {{ .Values.uchiwa.port }}

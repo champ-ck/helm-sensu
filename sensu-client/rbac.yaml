@@ -1,0 +1,35 @@
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: default
+  name: sensu-view-node
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: sensu-rolebinding
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: sensu
+roleRef:
+  kind: ClusterRole
+  name: view
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: sensu-nodes-rolebinding
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: sensu
+roleRef:
+  kind: ClusterRole
+  name: sensu-view-node
+  apiGroup: rbac.authorization.k8s.io

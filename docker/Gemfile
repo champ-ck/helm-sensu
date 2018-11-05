@@ -1,0 +1,8 @@
+source 'https://rubygems.org'
+
+gem 'sensu-plugins-kubernetes'
+gem 'sensu-plugins-slack'
+gem 'sensu-plugins-http'
+gem 'sensu-plugins-memory-checks'
+gem 'sensu-plugins-disk-checks'
+gem 'sensu-plugins-cpu-checks'

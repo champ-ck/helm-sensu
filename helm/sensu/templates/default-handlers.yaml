@@ -1,0 +1,17 @@
+apiVersion: v1
+data:
+  default_handlers.json: |
+      {
+        "handlers": {
+          "default": {
+            "type": "set",
+            "handlers": [
+              {{ .Values.handlers.default | quote }}
+            ]
+          }
+        }
+      }
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: default-handlers-config

@@ -1,0 +1,102 @@
+apiVersion: v1
+data:
+  check-sensu-website.json: |
+    {
+      "checks": {
+        "check-apiserver": {
+          "command": "check-kube-apiserver-available.rb --in-cluster",
+          "handlers": ["default", "slack"],
+          "interval": 10,
+          "occurrences": 2,
+          "standalone": false,
+          "subscribers": [
+            "k8s"
+          ]
+        },
+        "check-http": {
+          "command": "check-http.rb -u https://sensuapp.org",
+          "handlers": ["default", "slack"],
+          "interval": 10,
+          "subscribers": [ "http" ],
+          "occurrences": 2,
+          "standalone": false
+        },
+        "check-disk": {
+          "command": "check-disk-usage.rb -p \/var\/.* -x tmpfs,overlay,nsfs,debugfs,tracefs -w 85 -c 90",
+          "handlers": ["default", "slack"],
+          "interval": 10,
+          "subscribers": [ "disk" ],
+          "occurrences": 2,
+          "standalone": false
+        },
+        "check-ram": {
+          "command": "check-ram.rb -w 15 -c 5",
+          "handlers": ["default", "slack"],
+          "interval": 10,
+          "subscribers": [ "ram" ],
+          "occurrences": 2,
+          "standalone": false
+        },
+        "check-cpu": {
+          "command": "check-cpu.rb -w 80 -c 90",
+          "handlers": ["default", "slack"],
+          "interval": 10,
+          "subscribers": [ "cpu" ],
+          "occurrences": 2,
+          "standalone": false
+        },
+        "check-apiserver": {
+          "command": "check-kube-apiserver-available.rb --in-cluster",
+          "handlers": ["default", "slack"],
+          "interval": 10,
+          "subscribers": [ "k8s" ],
+          "occurrences": 2,
+          "standalone": false
+        },
+        "check-pods-restarting": {
+          "command": "check-kube-pods-restarting.rb --in-cluster",
+          "handlers": ["default", "slack"],
+          "interval": 10,
+          "subscribers": [ "k8s" ],
+          "occurrences": 2,
+          "standalone": false
+        },
+        "check-pods-ready": {
+          "command": "check-kube-pods-pending.rb --in-cluster",
+          "handlers": ["default", "slack"],
+          "interval": 10,
+          "subscribers": [ "k8s" ],
+          "occurrences": 2,
+          "standalone": false
+        },
+        "check-pods-runtime": {
+          "command": "check-kube-pods-runtime.rb --in-cluster",
+          "handlers": ["default", "slack"],
+          "interval": 10,
+          "subscribers": [ "k8s" ],
+          "occurrences": 2,
+          "standalone": false
+        },
+        "check-nodes-ready": {
+          "command": "check-kube-nodes-ready.rb --in-cluster",
+          "handlers": ["default", "slack"],
+          "interval": 10,
+          "subscribers": [ "k8s" ],
+          "occurrences": 2,
+          "standalone": false
+        },
+        "check-kubernetes-service": {
+          "command": "check-kube-service-available.rb --in-cluster -l kubernetes",
+          "handlers": ["default", "slack"],
+          "interval": 10,
+          "subscribers": [ "k8s" ],
+          "occurrences": 2,
+          "standalone": false
+        }
+      }
+    }
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: sensu-checks
+  namespace: sensu
