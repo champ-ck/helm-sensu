@@ -55,7 +55,7 @@ spec:
         - name: API_PORT
           value: {{ .Values.api.port | quote }}
         - name: REDIS_HOST
-          value: {{ template "sensu.redis.fullname" . }}
+          value: {{ template "sensu.redis.master" . }}
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
@@ -89,7 +89,7 @@ spec:
 {{ toYaml .Values.api.resources | indent 10 }}
         env:
         - name: REDIS_HOST
-          value: {{ template "sensu.redis.fullname" . }}
+          value: {{ template "sensu.redis.master" . }}
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:

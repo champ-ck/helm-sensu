@@ -12,6 +12,8 @@ I recomment to read Sensu [Document](https://docs.sensu.io/).
 helm dependency update helm/sensu
 
 helm install --namespace sensu --name sensu helm/sensu/ --values=helm/sensu/values.yaml  --debug
+
+helm upgrade sensu helm/sensu/ --values=helm/sensu/values.yaml
 ```
 Expose Uchiwa service/pod (Or bind Uchiwa with LoadBalancer/Ingress)
 

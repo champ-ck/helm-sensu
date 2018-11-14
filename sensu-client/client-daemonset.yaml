@@ -1,42 +1,3 @@
----
-apiVersion: v1
-data:
-  config.json: |
-    {
-      "redis": {
-        "host": "sensu-redis",
-        "port": 6379,
-        "password": "FL6vqYlbQu",
-        "db": 0,
-        "auto_reconnect": true,
-        "reconnect_on_error": true
-      },
-      "transport": {
-        "name": "redis"
-      },
-      "api": {
-        "host": "sensu-api",
-        "port": 4567
-      },
-      "client": {
-        "name": "infra",
-        "deregister": true,
-        "deregistration": {
-          "handler": "deregistration"
-        },
-        "subscriptions": [
-          "cpu",
-          "ram",
-          "disk"
-        ]
-      }
-    }
-kind: ConfigMap
-metadata:
-  creationTimestamp: null
-  name: sensu-client-infra-config
-  namespace: sensu
----
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -56,13 +17,68 @@ spec:
         app: sensu-client-infra
         component: client
     spec:
+      imagePullSecrets:
+      - name: docker-secret
       volumes:
         - name: sensu-config
-          configMap:
-            name: sensu-client-infra-config
+          emptyDir: {}
       tolerations:
       - key: node-role.kubernetes.io/master
         effect: NoSchedule
+
+      initContainers:
+      - name: sensu-init
+        args:
+          - /bin/sh
+          - -c
+          - |
+            client=$MY_NODE_NAME
+            config=$(cat <<EOF
+            {
+              "redis": {
+                "host": "sensu-redis-master",
+                "port": 6379,
+                "password": "",
+                "db": 0,
+                "auto_reconnect": true,
+                "reconnect_on_error": true
+              },
+              "transport": {
+                "name": "redis"
+              },
+              "api": {
+                "host": "sensu-api",
+                "port": 4567
+              },
+              "client": {
+                "name": "$client",
+                "deregister": true,
+                "deregistration": {
+                  "handler": "deregistration"
+                },
+                "subscriptions": [
+                  "cpu",
+                  "ram",
+                  "disk"
+                ]
+              }
+            }
+            EOF
+            )
+            echo $config
+            echo $config > /etc/sensu/conf.d/config.json
+        image: busybox
+        imagePullPolicy: Always
+        volumeMounts:
+          - name: sensu-config
+            mountPath: /etc/sensu/conf.d/
+        env:
+        - name: MY_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+
+
       containers:
       - name: sensu-client
         args:

@@ -4,7 +4,7 @@ data:
   config.json: |
     {
       "redis": {
-        "host": "sensu-redis",
+        "host": "sensu-redis-master",
         "port": 6379,
         "password": "FL6vqYlbQu",
         "db": 0,
@@ -32,45 +32,45 @@ data:
 kind: ConfigMap
 metadata:
   creationTimestamp: null
-  name: sensu-config-2
+  name: sensu-config-k8s
   namespace: sensu
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: sensu-client-2
+  name: sensu-client-k8s
   labels:
-    name: sensu-client-2
+    name: sensu-client-k8s
   namespace: sensu
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        name: sensu-client-2
+        name: sensu-client-k8s
     spec:
       imagePullSecrets:
       - name: gcr-credential
       volumes:
-        - name: sensu-config-2
+        - name: sensu-config-k8s
           configMap:
-            name: sensu-config-2
+            name: sensu-config-k8s
         - name: sensu-checks-2
           configMap:
             name: sensu-checks-2
       containers:
-      - name: sensu-client-2
+      - name: sensu-client-k8s
         args:
           - client
         env:
           - name: NO_CONFIGURE_DEFAULTS
             value: "true"
           - name: SENSU_CLIENT_NAME
-            value: sensu-client-2
+            value: sensu-client-k8s
         image: sensu:latest
         imagePullPolicy: Always
         volumeMounts:
-          - name: sensu-config-2
+          - name: sensu-config-k8s
             mountPath: /etc/sensu/conf.d/config.json
             subPath: config.json
         resources:

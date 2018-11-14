@@ -14,6 +14,10 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- printf "%s-%s" "sensu" "redis" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
+{{- define "sensu.redis.master" -}}
+{{- printf "sensu-redis-master"}}
+{{- end -}}
+
 {{/*
 Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
